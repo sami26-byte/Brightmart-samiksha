@@ -1,19 +1,33 @@
-import streamlit as st
-import plotlib
-import numpy as np
+import pickle
 
-# Load the saved model
-model = plotlib.load(open('linear_reg.sav', 'rb'))
+import pandas as pd
+import streamlit as st
+
+MODEL_PATH = 'linear_reg (1).sav'
+
+
+@st.cache_resource
+def load_model():
+    with open(MODEL_PATH, 'rb') as model_file:
+        return pickle.load(model_file)
+
+
+model = load_model()
 
 st.title('Sales Prediction App')
 
-# Input features
-TV = st.number_input('TV Advertising Budget', min_value=0.0)
-Radio = st.number_input('Radio Advertising Budget', min_value=0.0)
-Newspaper = st.number_input('Newspaper Advertising Budget', min_value=0.0)
+TV = st.number_input('TV Advertising Budget', min_value=0.0, value=0.0)
+Radio = st.number_input('Radio Advertising Budget', min_value=0.0, value=0.0)
+Newspaper = st.number_input('Newspaper Advertising Budget', min_value=0.0, value=0.0)
 
-# Make prediction
 if st.button('Predict Sales'):
-    input_data = np.array([[TV, Radio, Newspaper]])
-    prediction = model.predict(input_data)[0]
-    st.success(f'Predicted Sales: {prediction:.2f}')
+    try:
+        input_data = pd.DataFrame(
+            [[TV, Radio, Newspaper]],
+            columns=['TV', 'Radio', 'Newspaper'],
+            dtype=float,
+        )
+        prediction = model.predict(input_data)[0]
+        st.success(f'Predicted Sales: {prediction:.2f}')
+    except Exception as exc:
+        st.error(f'Prediction failed: {exc}')
